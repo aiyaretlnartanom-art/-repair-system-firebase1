@@ -1,41 +1,266 @@
 <!DOCTYPE html>
-
 <html lang="th">
-
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แฟ้มสะสมผลงาน - อมรภัทร จิตคติ</title>
+    <link rel="icon" type="image/png" href="11.png?v=2">
+    <style>
+        body { font-family: 'Tahoma', sans-serif; line-height: 1.6; background-color: #f4f4f9; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1, h2 { color: #198754; border-bottom: 2px solid #198754; padding-bottom: 10px; }
+        .profile-section { margin-bottom: 30px; }
+        .skill-tag { display: inline-block; background: #e2e6ea; padding: 5px 15px; border-radius: 20px; margin: 5px; font-size: 0.9em; }
+        
+        /* สไตล์สำหรับกล่องจัดการหลังบ้าน */
+        .admin-panel { background: #fff3cd; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ffe69c; }
+        input[type="text"] { padding: 8px; width: 70%; margin-right: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 8px 15px; background: #198754; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #146c43; }
+        .delete-btn { background: #dc3545; padding: 4px 10px; font-size: 0.85em; }
+        .delete-btn:hover { background: #b02a37; }
 
-  <meta charset="UTF-8">
+        .project-card { border-left: 5px solid #198754; padding: 15px; background: #f9f9f9; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* สไตล์สำหรับกล่องอัปโหลดรูป */
+        .upload-box { background: #e2e6ea; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #adb5bd; }
+        .action-group { margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #ccc; }
+        .action-group:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #b02a37; }
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>ระบบแจ้งซ่อม (Firebase)</title>
-
-  <style>
-
-    body { font-family: Tahoma, sans-serif; padding: 20px; background-color: #f8f9fa; }
-
-    .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-
-    input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
-
-    button { background-color: #0d6efd; color: white; border: none; cursor: pointer; font-weight: bold; }
-
-    button:hover { background-color: #0b5ed7; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-
-    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-
-    th { background-color: #f2f2f2; }
-
-  </style>
-
+        /* สไตล์กล่องเวลาปฏิบัติงาน */
+        .work-time-card { background: linear-gradient(135deg, #e8f5e9, #c8e6c9); padding: 20px 25px; border-radius: 8px; border: 1px solid #a5d6a7; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .work-time-text { font-size: 1.25em; font-weight: bold; color: #2e7d32; margin-top: 5px; }
+    </style>
 </head>
-
 <body>
 
+<div class="container">
+    <!-- แผงควบคุมสำหรับเพิ่มข้อมูล (Admin Panel) -->
+    <div class="admin-panel">
+        <h3>วิชาที่ต้องเรียนของวัน (เพิ่ม/ลบ ข้อมูลสดผ่านเว็บ)</h3>
+        <div style="margin-top: 10px;">
+            <input type="text" id="courseInput" placeholder="กรอกชื่อรายวิชาหรือภาระงานสอน...">
+            <button id="addBtn">บันทึกข้อมูล</button>
+        </div>
+    </div>
+
+    <!-- ส่วนเวลาปฏิบัติงาน (Real-time Clock API) -->
+    <div class="work-time-card">
+        <div>
+            <div style="font-size: 0.9em; color: #388e3c; font-weight: bold;">⏱️ เวลาปฏิบัติงานปัจจุบัน</div>
+            <div id="liveClock" class="work-time-text">กำลังโหลดเวลา...</div>
+        </div>
+        <div style="text-align: right; color: #2e7d32;">
+            <div style="font-weight: bold; font-size: 1.1em;">วิทยาลัยเทคนิคนางรอง</div>
+            <div style="font-size: 0.85em; opacity: 0.8;">Nangrong Technical College</div>
+        </div>
+    </div>
+
+    <!-- ส่วนข้อมูลส่วนตัว -->
+    <section class="profile-section">
+        <h1>นายไอยเรศ เหลือถนอม</h1>
+        <p><strong>ตำแหน่ง:</strong> นักศึกษา แผนกวิชาเทคโนโลยีสารสนเทศ</p>
+        <p><strong>สังกัด:</strong> วิทยาลัยเทคนิคนางรอง จังหวัดบุรีรัมย์</p>
+        <p>เด็กเก่งสุดโหดประจำเเผนกคอมพิวเตอร์</p>
+    </section>
+
+    <!-- ส่วนทักษะ -->
+    <section class="profile-section">
+        <h2>ทักษะและความเชี่ยวชาญ</h2>
+        <span class="skill-tag">Python</span>
+        <span class="skill-tag">PHP</span>
+        <span class="skill-tag">Docker</span>
+        <span class="skill-tag">Flask</span>
+        <span class="skill-tag">Assembly</span>
+        <span class="skill-tag">Database Management</span>
+    </section>
+
+    <!-- ส่วนภาระการสอนที่ดึงจากฐานข้อมูล -->
+    <section class="profile-section">
+        <h2>วิชาที่ต้องเรียน</h2>
+        <div id="teachingLoadContainer">
+            <p style="color: gray;">กำลังโหลดข้อมูลจากฐานข้อมูล...</p>
+        </div>
+    </section>
+
+    <!-- ส่วนแกลลอรี่ผลงาน (ดึงจาก Google Drive) -->
+    <section class="profile-section">
+        <h2>แกลลอรี่ผลงาน(ความน่ารักของปังๆเฮงๆ)</h2>
+        
+        <!-- กล่องสำหรับจัดการรูปภาพ (อัปโหลดและลบ) -->
+        <div class="upload-box">
+            <div class="action-group">
+                <h4 style="margin-top: 0; color: #198754;">📤 เพิ่มรูปภาพผลงานใหม่</h4>
+                <input type="file" id="uploadInput" accept="image/*" style="margin-bottom: 10px;">
+                <br>
+                <button onclick="uploadImage()" id="uploadBtn">อัปโหลดรูปลง Drive</button>
+            </div>
+            
+            <div class="action-group">
+                <h4 style="margin-top: 0; color: #dc3545;">🗑️ ลบรูปภาพ</h4>
+                <p style="font-size: 0.9em; margin-top: -10px; color: #555;">พิมพ์ชื่อไฟล์ที่ต้องการลบ (ดูชื่อได้จากภาพด้านล่าง ต้องพิมพ์นามสกุลด้วย เช่น image.jpg)</p>
+                <input type="text" id="deleteInput" placeholder="เช่น 20240328_12345.jpg" style="width: 50%;">
+                <button onclick="deleteImage()" id="deleteBtn" class="btn-danger">ลบไฟล์ออกจาก Drive</button>
+            </div>
+        </div>
+
+        <!-- โค้ดสำหรับฝังโฟลเดอร์ Google Drive -->
+        <iframe src="https://drive.google.com/embeddedfolderview?id=1-49iWtMxXrfOs1fydhh5xshrYuSZBLXb#grid" 
+                style="width: 100%; height: 600px; border: none; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        </iframe>
+    </section>
+
+    <footer>
+        <p style="text-align: center; font-size: 0.8em; color: #888;">© 2026 ระบบแฟ้มสะสมผลงานออนไลน์</p>
+    </footer>
+</div>
+
+<!-- โค้ดเชื่อมต่อ Firebase, นาฬิกา และ Google Drive -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 🔑 ตั้งค่า Firebase Config ที่ดึงมาจากโปรเจกต์ของอาจารย์
+    const firebaseConfig = {
+    apiKey: "AIzaSyBL0tp785h5OSvDfMBNHGBIzf0YhwDAaDw",
+  authDomain: "projectmahainwaiyaret.firebaseapp.com",
+  projectId: "projectmahainwaiyaret",
+  storageBucket: "projectmahainwaiyaret.firebasestorage.app",
+  messagingSenderId: "967076267529",
+  appId: "1:967076267529:web:b5f9bf8d7d812f31781ad8",
+  measurementId: "G-Z229KKWLLF"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const dbCollection = "teachingLoads";
+
+    // ⏱️ ฟังก์ชันแสดงเวลาปฏิบัติงาน (Real-time Clock)
+    function updateLiveClock() {
+        const now = new Date();
+        const options = { 
+            timeZone: 'Asia/Bangkok', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            weekday: 'long', 
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit' 
+        };
+        const formatter = new Intl.DateTimeFormat('th-TH', options);
+        document.getElementById('liveClock').innerText = formatter.format(now);
+    }
+    setInterval(updateLiveClock, 1000);
+    updateLiveClock();
+
+    // ฟังก์ชันดึงข้อมูล Firebase
+    async function fetchTeachingLoads() {
+        const container = document.getElementById('teachingLoadContainer');
+        try {
+            const querySnapshot = await getDocs(collection(db, dbCollection));
+            container.innerHTML = '';
+            if (querySnapshot.empty) {
+                container.innerHTML = '<p style="color: gray;">ยังไม่มีข้อมูลภาระการสอนในระบบ</p>';
+                return;
+            }
+            querySnapshot.forEach((docSnap) => {
+                const data = docSnap.data();
+                const card = document.createElement('div');
+                card.className = 'project-card';
+                card.innerHTML = `
+                    <span>📚 ${data.courseName}</span>
+                    <button class="delete-btn" data-id="${docSnap.id}">ลบ</button>
+                `;
+                container.appendChild(card);
+            });
+            document.querySelectorAll('.delete-btn').forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    if (confirm('ต้องการลบข้อมูลนี้ใช่หรือไม่?')) {
+                        await deleteDoc(doc(db, dbCollection, id));
+                        fetchTeachingLoads();
+                    }
+                });
+            });
+        } catch (error) {
+            console.error("Error loading data: ", error);
+        }
+    }
+
+    document.getElementById('addBtn').addEventListener('click', async () => {
+        const input = document.getElementById('courseInput');
+        const courseName = input.value.trim();
+        if (!courseName) return alert('กรุณากรอกข้อมูลก่อนบันทึก');
+        try {
+            await addDoc(collection(db, dbCollection), { courseName: courseName, timestamp: new Date() });
+            input.value = '';
+            fetchTeachingLoads();
+        } catch (error) {
+            alert('ไม่สามารถบันทึกข้อมูลได้');
+        }
+    });
+
+    fetchTeachingLoads();
+
+    // =========================================================================
+    // 🔑 Web App URL ของ Google Apps Script (จัดการรูปภาพ)
+    // =========================================================================
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbwMprE28abBXHoK8VBl8Tmz32kVGvk2Pz2YgNheK1D1P4L2AzwKcqvcavP3tTaDx_LXCA/exec'; 
+
+    async function uploadImage() {
+        const fileInput = document.getElementById('uploadInput');
+        if (!fileInput || fileInput.files.length === 0) return alert('กรุณาเลือกไฟล์รูปภาพก่อนอัปโหลดครับ');
+        const file = fileInput.files[0];
+        const btn = document.getElementById('uploadBtn');
+        btn.innerText = 'กำลังอัปโหลด...';
+        btn.disabled = true;
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64Data = e.target.result.split(',')[1];
+            const payload = { action: 'upload', filename: file.name, mimeType: file.type, base64: base64Data };
+            try {
+                const response = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+                const result = await response.json();
+                if(result.status === 'success') {
+                    alert('อัปโหลดเสร็จสมบูรณ์! กดรีเฟรช (F5) 1 ครั้งเพื่อดูรูปครับ');
+                    fileInput.value = ''; 
+                } else { alert('เกิดข้อผิดพลาด: ' + result.message); }
+            } catch (error) { alert('อัปโหลดไม่สำเร็จ ลองตรวจสอบอินเทอร์เน็ตครับ'); } 
+            finally { btn.innerText = 'อัปโหลดรูปลง Drive'; btn.disabled = false; }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function deleteImage() {
+        const deleteInput = document.getElementById('deleteInput');
+        const fileName = deleteInput.value.trim();
+        if (!fileName) return alert('กรุณาพิมพ์ชื่อไฟล์ที่ต้องการลบครับ');
+        
+        if (!confirm('คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์ "' + fileName + '" ออกจาก Google Drive?')) return;
+
+        const btn = document.getElementById('deleteBtn');
+        btn.innerText = 'กำลังลบไฟล์...';
+        btn.disabled = true;
+
+        const payload = { action: 'delete', filename: fileName };
+        try {
+            const response = await fetch(scriptUrl, { method: 'POST', body: JSON.stringify(payload) });
+            const result = await response.json();
+            if(result.status === 'success') {
+                alert('ลบไฟล์เสร็จสมบูรณ์! กดรีเฟรช (F5) 1 ครั้งเพื่อให้ภาพหายไปครับ');
+                deleteInput.value = ''; 
+            } else { alert('เกิดข้อผิดพลาด: ' + result.message); }
+        } catch (error) { alert('ลบไฟล์ไม่สำเร็จ ลองตรวจสอบอินเทอร์เน็ตครับ'); } 
+        finally { btn.innerText = 'ลบไฟล์ออกจาก Drive'; btn.disabled = false; }
+    }
+
+    window.uploadImage = uploadImage;
+    window.deleteImage = deleteImage;
+</script>
+
 </body>
-
 </html>
-
-
