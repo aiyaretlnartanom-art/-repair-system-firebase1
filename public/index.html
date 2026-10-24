@@ -40,6 +40,7 @@ body {
         0 20px 60px rgba(0, 0, 0, 0.55),
         0 0 30px rgba(120, 65, 180, 0.08);
     border: 1px solid rgba(157, 92, 211, 0.18);
+    position: relative; /* สำหรับจัดตำแหน่งปุ่ม Logout มุมขวาบน */
 }
 
 /* ==============================
@@ -297,6 +298,25 @@ button:disabled {
 }
 
 /* ==============================
+   Logout Button (Top Right)
+   ============================== */
+
+.logout-btn {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: linear-gradient(135deg, #7f1d1d, #991b1b);
+    padding: 8px 15px;
+    font-size: 0.85rem;
+    box-shadow: 0 4px 12px rgba(153, 27, 27, 0.3);
+}
+
+.logout-btn:hover {
+    background: linear-gradient(135deg, #991b1b, #b91c1c);
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.4);
+}
+
+/* ==============================
    Upload Box
    ============================== */
 
@@ -443,6 +463,13 @@ footer p {
         border-radius: 16px;
     }
 
+    .logout-btn {
+        top: 20px;
+        right: 18px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
     h1 {
         font-size: 1.7rem;
     }
@@ -491,6 +518,14 @@ footer p {
         border-radius: 13px;
     }
 
+    .logout-btn {
+        position: relative;
+        top: 0;
+        right: 0;
+        margin-bottom: 15px;
+        width: 100%;
+    }
+
     h1 {
         font-size: 1.45rem;
     }
@@ -527,6 +562,9 @@ footer p {
 <body>
 
 <div class="container">
+    <!-- ปุ่ม Logout มุมขวาบน -->
+    <button id="logoutBtn" class="logout-btn">🚪 ออกจากระบบ</button>
+
     <!-- แผงควบคุมสำหรับเพิ่มข้อมูล (Admin Panel) -->
     <div class="admin-panel">
         <h3>วิชาที่ต้องเรียนของวัน (เพิ่ม/ลบ ข้อมูลสดผ่านเว็บ)</h3>
@@ -611,34 +649,41 @@ footer p {
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-    // 🔑 ตั้งค่า Firebase Config ที่ดึงมาจากโปรเจกต์ของอาจารย์
+    // 🔑 ตั้งค่า Firebase Config ที่ดึงมาจากโปรเจกต์
     const firebaseConfig = {
-    apiKey: "AIzaSyBL0tp785h5OSvDfMBNHGBIzf0YhwDAaDw",
-  authDomain: "projectmahainwaiyaret.firebaseapp.com",
-  projectId: "projectmahainwaiyaret",
-  storageBucket: "projectmahainwaiyaret.firebasestorage.app",
-  messagingSenderId: "967076267529",
-  appId: "1:967076267529:web:b5f9bf8d7d812f31781ad8",
-  measurementId: "G-Z229KKWLLF"
+        apiKey: "AIzaSyBL0tp785h5OSvDfMBNHGBIzf0YhwDAaDw",
+        authDomain: "projectmahainwaiyaret.firebaseapp.com",
+        projectId: "projectmahainwaiyaret",
+        storageBucket: "projectmahainwaiyaret.firebasestorage.app",
+        messagingSenderId: "967076267529",
+        appId: "1:967076267529:web:b5f9bf8d7d812f31781ad8",
+        measurementId: "G-Z229KKWLLF"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const dbCollection = "teachingLoads";
     const auth = getAuth(app);
+    const dbCollection = "teachingLoads";
 
+    // ตรวจสอบสถานะการล็อกอิน ถ้ายังไม่ล็อกอินให้เตะกลับไปหน้า login.html
     onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      window.location.href = "login.html";
-    }
-  });
-
-  function logout() {
-    signOut(auth).then(() => {
-      window.location.href = "login.html";
+        if (!user) {
+            window.location.href = "login.html";
+        }
     });
-  }
+
+    // ฟังก์ชันจัดการปุ่ม Logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+            window.location.href = "login.html";
+        } catch (error) {
+            console.error("เกิดข้อผิดพลาดในการออกจากระบบ: ", error);
+            alert("ไม่สามารถออกจากระบบได้ กรุณาลองใหม่อีกครั้ง");
+        }
+    });
 
     // ⏱️ ฟังก์ชันแสดงเวลาปฏิบัติงาน (Real-time Clock)
     function updateLiveClock() {
@@ -764,8 +809,5 @@ footer p {
     window.uploadImage = uploadImage;
     window.deleteImage = deleteImage;
 </script>
-<button onclick="window.location.href='login.html'" style="padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">
-    ← กลับไปหน้าเข้าสู่ระบบ
-</button>
 </body>
 </html>
